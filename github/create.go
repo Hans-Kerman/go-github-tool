@@ -7,6 +7,8 @@ import (
 	"io"
 	"net/http"
 	"os"
+
+	"github.com/charmbracelet/huh"
 )
 
 const IssuesURL = "https://api.github.com/repos/"
@@ -28,21 +30,57 @@ var TestRequest = issueRequest{
 	Body:  "test string",
 }
 
-func SendRequest(bodyData issueRequest, target string) error {
+func MakeIssue() (op *issueRequest, err error) {
+	op = new(issueRequest)
+	err = huh.NewInput().
+		Title("输入构造issue的标题").
+		Prompt(">>?").
+		Value(&op.Title).
+		Run()
+	if err != nil {
+		err = fmt.Errorf("输入标题出现错误:%w", err)
+		return
+	}
+	editor := os.Getenv("EDITOR")
+	if editor == "" {
+		err = huh.NewText().
+			Title("输入构造的issue的主体内容").
+			Value(&op.Body).
+			ExternalEditor(false).
+			Run()
+		if err != nil {
+			err = fmt.Errorf("输入主体出现错误:%w", err)
+			return
+		}
+	} else {
+		err = huh.NewText().
+			Title("输入构造的issue的主体内容").
+			Value(&op.Body).
+			Run()
+		if err != nil {
+			err = fmt.Errorf("输入主体出现错误:%w", err)
+			return
+		}
+	}
+	return
+}
+
+func SendRequest(bodyData *issueRequest, target string) error {
 	oauthKey := os.Getenv("ghPAT")
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(bodyData); err != nil {
 		return fmt.Errorf("error while encode json: %w", err)
 	}
-
-	req, err := http.NewRequest("POST", IssuesURL+target+"/issues", &buf)
+	apiURL := IssuesURL + target + "/issues"
+	req, err := http.NewRequest("POST", apiURL, &buf)
 	if err != nil {
 		return fmt.Errorf("error while makeHTTPRequest: %w", err)
 	}
 	req.Header.Set("Accept", "application/vnd.github+json")
 	req.Header.Set("Authorization", "Bearer "+oauthKey)
 
+	fmt.Printf("向%s发送请求\n", apiURL)
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("error while sent request: %w", err)

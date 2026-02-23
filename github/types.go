@@ -25,7 +25,7 @@ type User struct {
 func FormatRepoPath(target string) (string, error) {
 	u, err := url.Parse(target)
 	//尝试解析https风格url
-	if err != nil && u.Scheme != "" {
+	if err == nil && u.Scheme != "" {
 		path := u.Path
 		path = strings.Trim(path, "/") //去除首尾'/'
 		path = strings.TrimSuffix(path, ".git")
