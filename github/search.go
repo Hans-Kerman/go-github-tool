@@ -6,35 +6,19 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 )
 
-const IssuesURL = "https://api.github.com/search/issues"
+const SearchURL = "https://api.github.com/search/issues"
 
 type IssuesSearchResult struct {
 	TotalCount int `json:"total_count"`
 	Items      []*Issue
 }
 
-type Issue struct {
-	Number    int
-	HTMLURL   string `json:"html_url"`
-	Title     string
-	State     string
-	User      *User
-	CreatedAt time.Time `json:"created_at"`
-	Body      string    //md格式
-}
-
-type User struct {
-	Login   string
-	HTMLURL string `json:"html_url"`
-}
-
 func SearchIssues(terms []string) (*IssuesSearchResult, error) {
 	//编码查询语句字符串，变成%转义字符格式
 	q := url.QueryEscape(strings.Join(terms, " "))
-	resp, err := http.Get(IssuesURL + "?q=" + q)
+	resp, err := http.Get(SearchURL + "?q=" + q)
 	if err != nil {
 		return nil, err
 	}
