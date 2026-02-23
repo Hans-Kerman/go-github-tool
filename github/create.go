@@ -9,7 +9,7 @@ import (
 	"os"
 )
 
-const IssuesURL = "https://api.github.com/repos"
+const IssuesURL = "https://api.github.com/repos/"
 
 type issueRequest struct {
 	Title string `json:"title"`
